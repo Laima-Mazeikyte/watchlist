@@ -78,6 +78,9 @@
 		</form>
 	{/if}
 	<span class="list-item-title">{item.title}</span>
+	{#if item.year != null}
+		<span class="list-item-year">{item.year}</span>
+	{/if}
 	<div class="list-item-actions">
 		{#each actions as action}
 			<form
@@ -164,6 +167,11 @@
 	.list-item-title {
 		flex: 1;
 		min-width: 0;
+	}
+
+	.list-item-year {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
 	}
 
 	.list-item-actions {

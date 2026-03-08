@@ -26,12 +26,12 @@ export const load: PageServerLoad = async (event) => {
 	const userId = event.locals.user.id;
 	const watchlist = await db.query.movie.findMany({
 		where: and(eq(movie.userId, userId), eq(movie.watched, false)),
-		columns: { id: true, title: true, favorite: true, poster_path: true },
+		columns: { id: true, title: true, year: true, favorite: true, poster_path: true },
 		orderBy: desc(movie.id)
 	});
 	const watched = await db.query.movie.findMany({
 		where: and(eq(movie.userId, userId), eq(movie.watched, true)),
-		columns: { id: true, title: true, favorite: true, poster_path: true },
+		columns: { id: true, title: true, year: true, favorite: true, poster_path: true },
 		orderBy: desc(movie.id)
 	});
 

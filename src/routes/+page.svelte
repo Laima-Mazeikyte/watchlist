@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Film, LogOut, Plus, RefreshCw, CheckCircle, RotateCcw, Search, Trash2, Star, Upload } from 'lucide-svelte';
+	import { Film, LogOut, Plus, RefreshCw, CheckCircle, RotateCcw, Search, Trash2, Star, ClipboardPaste } from 'lucide-svelte';
 	import {
 		Button,
 		Input,
@@ -191,7 +191,7 @@
 					onclick={() => (importModalOpen = true)}
 				>
 					{#snippet children()}
-						<Upload size={16} aria-hidden="true" />
+						<ClipboardPaste size={16} aria-hidden="true" />
 						<span class="btn-label">Import movies</span>
 					{/snippet}
 				</Button>
@@ -203,20 +203,17 @@
 					<div class="add-row">
 						<form method="get" action="." class="form form--add">
 							<Label for="search" visuallyHidden>Search for a movie</Label>
-							<Input
-								id="search"
-								name="search"
-								type="search"
-								placeholder="Search for a movie…"
-								value={data.searchQuery ?? ''}
-								class="input--full"
-							/>
-							<Button variant="primary" type="submit">
-								{#snippet children()}
-									<Search size={18} aria-hidden="true" />
-									Search
-								{/snippet}
-							</Button>
+							<div class="search-input-wrap">
+								<Search size={18} class="search-input-icon" aria-hidden="true" />
+								<Input
+									id="search"
+									name="search"
+									type="search"
+									placeholder="Search for a movie…"
+									value={data.searchQuery ?? ''}
+									class="input--full input--with-icon"
+								/>
+							</div>
 						</form>
 					</div>
 					{#if form?.message}
@@ -425,6 +422,25 @@
 
 	.form--add :global(.label) {
 		margin-bottom: 0;
+	}
+
+	.search-input-wrap {
+		position: relative;
+		width: 100%;
+	}
+
+	.search-input-wrap :global(.search-input-icon) {
+		position: absolute;
+		left: var(--space-3);
+		top: 50%;
+		transform: translateY(-50%);
+		pointer-events: none;
+		color: var(--color-text-muted);
+	}
+
+	.search-input-wrap :global(.input--with-icon) {
+		padding-left: 2.5rem;
+		width: 100%;
 	}
 
 	.form--import {
