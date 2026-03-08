@@ -50,12 +50,12 @@
 	.login-page {
 		max-width: 24rem;
 		margin: 0 auto;
-		padding: 2rem 1.25rem;
+		padding: var(--space-7) var(--space-5);
 	}
 
 	.login-title {
-		margin: 0 0 1.5rem;
-		font-size: 1.5rem;
+		margin: 0 0 var(--space-6);
+		font-size: var(--font-size-lg);
 		font-weight: 600;
 		color: var(--color-text);
 	}
@@ -63,20 +63,20 @@
 	.login-form {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: var(--space-4);
 	}
 
 	.login-field {
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
+		gap: var(--space-2);
 	}
 
 	.login-label {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.375rem;
-		font-size: 0.875rem;
+		gap: var(--space-2);
+		font-size: var(--font-size-sm);
 		font-weight: 500;
 		color: var(--color-text-strong);
 	}
@@ -84,34 +84,34 @@
 	.btn--icon {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.375rem;
+		gap: var(--space-2);
 	}
 
 	.login-input {
 		height: 2.5rem;
-		padding: 0.5rem 0.75rem;
+		padding: var(--space-2) var(--space-3);
 		font: inherit;
-		font-size: 1rem;
-		border: 1px solid var(--color-border-input);
-		border-radius: 6px;
+		font-size: var(--font-size-base);
+		border: var(--border-width-thin) solid var(--color-border-input);
+		border-radius: var(--radius-md);
 		background: var(--color-input-bg);
 		color: var(--color-text);
 	}
 
 	.login-actions {
 		display: flex;
-		gap: 0.75rem;
-		margin-top: 0.25rem;
+		gap: var(--space-3);
+		margin-top: var(--space-1);
 	}
 
 	.btn {
 		height: 2.5rem;
-		padding: 0.5rem 1rem;
+		padding: var(--space-2) var(--space-4);
 		font: inherit;
-		font-size: 0.9375rem;
+		font-size: var(--font-size-ui);
 		font-weight: 500;
 		border: none;
-		border-radius: 6px;
+		border-radius: var(--radius-md);
 		cursor: pointer;
 	}
 
@@ -135,7 +135,7 @@
 
 	.error {
 		margin: 0;
-		font-size: 0.875rem;
+		font-size: var(--font-size-sm);
 		color: var(--color-error);
 	}
 </style>
