@@ -15,6 +15,13 @@
       "when": 1772982836242,
       "tag": "0001_whole_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772988912718,
+      "tag": "0002_fixed_kronos",
+      "breakpoints": true
     }
   ]
 }

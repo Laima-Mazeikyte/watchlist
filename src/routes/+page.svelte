@@ -8,9 +8,12 @@
 <main class="page">
 	<header class="header">
 		<h1 class="title">Watchlist</h1>
-		<form method="post" action="?/signOut" use:enhance>
-			<button type="submit" class="btn btn--secondary">Sign out</button>
-		</form>
+		<div class="header-actions">
+			<span class="signed-in">Signed in as <strong>{data.user.name}</strong></span>
+			<form method="post" action="?/signOut" use:enhance>
+				<button type="submit" class="btn btn--secondary">Sign out</button>
+			</form>
+		</div>
 	</header>
 
 	<section class="section" aria-labelledby="add-heading">
@@ -37,12 +40,49 @@
 
 	<section class="section" aria-labelledby="list-heading">
 		<h2 id="list-heading" class="section-title">Your list</h2>
-		{#if data.movies.length === 0}
+		{#if data.watchlist.length === 0}
 			<p class="empty">No movies yet. Add one above.</p>
 		{:else}
 			<ul class="list">
-				{#each data.movies as m (m.id)}
-					<li class="list-item">{m.title}</li>
+				{#each data.watchlist as m (m.id)}
+					<li class="list-item">
+						<span class="list-item-title">{m.title}</span>
+						<div class="list-item-actions">
+							<form method="post" action="?/markWatched" use:enhance class="list-item-form">
+								<input type="hidden" name="id" value={m.id} />
+								<button type="submit" class="btn btn--secondary btn--small">Mark as watched</button>
+							</form>
+							<form method="post" action="?/deleteMovie" use:enhance class="list-item-form">
+								<input type="hidden" name="id" value={m.id} />
+								<button type="submit" class="btn btn--secondary btn--small">Remove</button>
+							</form>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
+
+	<section class="section" aria-labelledby="watched-heading">
+		<h2 id="watched-heading" class="section-title">Watched</h2>
+		{#if data.watched.length === 0}
+			<p class="empty">No watched movies yet.</p>
+		{:else}
+			<ul class="list">
+				{#each data.watched as m (m.id)}
+					<li class="list-item">
+						<span class="list-item-title">{m.title}</span>
+						<div class="list-item-actions">
+							<form method="post" action="?/markUnwatched" use:enhance class="list-item-form">
+								<input type="hidden" name="id" value={m.id} />
+								<button type="submit" class="btn btn--secondary btn--small">Mark as unwatched</button>
+							</form>
+							<form method="post" action="?/deleteMovie" use:enhance class="list-item-form">
+								<input type="hidden" name="id" value={m.id} />
+								<button type="submit" class="btn btn--secondary btn--small">Remove</button>
+							</form>
+						</div>
+					</li>
 				{/each}
 			</ul>
 		{/if}
@@ -64,6 +104,22 @@
 		margin-bottom: 2.5rem;
 		padding-bottom: 1.5rem;
 		border-bottom: 1px solid #e5e5e5;
+	}
+
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.signed-in {
+		font-size: 0.875rem;
+		color: #666;
+	}
+
+	.signed-in strong {
+		font-weight: 600;
+		color: #444;
 	}
 
 	.title {
@@ -169,12 +225,39 @@
 	}
 
 	.list-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
 		padding: 0.625rem 0.75rem;
 		margin-bottom: 0.25rem;
 		background: #fff;
 		border: 1px solid #e5e5e5;
 		border-radius: 6px;
 		font-size: 0.9375rem;
+	}
+
+	.list-item-title {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.list-item-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+
+	.list-item-form {
+		display: inline;
+		margin: 0;
+	}
+
+	.btn--small {
+		height: 2rem;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.8125rem;
 	}
 
 	.list-item:last-child {
