@@ -22,6 +22,20 @@
       "when": 1772988912718,
       "tag": "0002_fixed_kronos",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772993123223,
+      "tag": "0003_flowery_masked_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772994000000,
+      "tag": "0004_add_movie_year",
+      "breakpoints": true
     }
   ]
 }

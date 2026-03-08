@@ -5,6 +5,7 @@ import type { PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { movie } from '$lib/server/db/schema';
+import { parseCSV } from '$lib/server/import/parsers';
 
 function parseMovieId(formData: FormData): number | null {
 	const raw = formData.get('id') ?? formData.get('movieId');
@@ -19,12 +20,12 @@ export const load: PageServerLoad = async (event) => {
 	const userId = event.locals.user.id;
 	const watchlist = await db.query.movie.findMany({
 		where: and(eq(movie.userId, userId), eq(movie.watched, false)),
-		columns: { id: true, title: true },
+		columns: { id: true, title: true, favorite: true },
 		orderBy: desc(movie.id)
 	});
 	const watched = await db.query.movie.findMany({
 		where: and(eq(movie.userId, userId), eq(movie.watched, true)),
-		columns: { id: true, title: true },
+		columns: { id: true, title: true, favorite: true },
 		orderBy: desc(movie.id)
 	});
 	return { user: event.locals.user, watchlist, watched };
@@ -86,6 +87,62 @@ export const actions: Actions = {
 			.set({ watched: false })
 			.where(and(eq(movie.id, id), eq(movie.userId, event.locals.user.id)));
 		return redirect(302, '/');
+	},
+	toggleFavorite: async (event) => {
+		if (!event.locals.user) {
+			return redirect(302, '/login');
+		}
+		const id = parseMovieId(await event.request.formData());
+		if (id == null) {
+			return fail(400, { message: 'Invalid movie' });
+		}
+		const [current] = await db
+			.select({ favorite: movie.favorite })
+			.from(movie)
+			.where(and(eq(movie.id, id), eq(movie.userId, event.locals.user.id)))
+			.limit(1);
+		if (!current) {
+			return fail(404, { message: 'Movie not found' });
+		}
+		await db
+			.update(movie)
+			.set({ favorite: !current.favorite })
+			.where(and(eq(movie.id, id), eq(movie.userId, event.locals.user.id)));
+		return {};
+	},
+	importMovies: async (event) => {
+		if (!event.locals.user) {
+			return redirect(302, '/login');
+		}
+		const formData = await event.request.formData();
+		const file = formData.get('file');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { importError: 'Please choose a file to import.' });
+		}
+		if (!file.name.toLowerCase().endsWith('.csv')) {
+			return fail(400, { importError: 'File must be a CSV.' });
+		}
+		let content: string;
+		try {
+			content = await file.text();
+		} catch {
+			return fail(400, { importError: 'Could not read file. Use UTF-8 text.' });
+		}
+		const entries = parseCSV(content).filter(
+			(e) => e.title.trim().length > 0
+		);
+		if (entries.length === 0) {
+			return fail(400, { importError: 'No movies found in this file.' });
+		}
+		const userId = event.locals.user.id;
+		await db.insert(movie).values(
+			entries.map((e) => ({
+				title: e.title.trim(),
+				year: e.year,
+				userId
+			}))
+		);
+		return { importSuccess: true, importCount: entries.length };
 	},
 	signOut: async (event) => {
 		await auth.api.signOut({
