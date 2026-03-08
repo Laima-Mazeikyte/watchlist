@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Film, LogOut, Plus, Check, RotateCcw, Trash2 } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -7,11 +8,17 @@
 
 <main class="page">
 	<header class="header">
-		<h1 class="title">Watchlist</h1>
+		<h1 class="title">
+			<Film size={24} class="title-icon" aria-hidden="true" />
+			Watchlist
+		</h1>
 		<div class="header-actions">
 			<span class="signed-in">Signed in as <strong>{data.user.name}</strong></span>
 			<form method="post" action="?/signOut" use:enhance>
-				<button type="submit" class="btn btn--secondary">Sign out</button>
+				<button type="submit" class="btn btn--secondary btn--icon">
+					<LogOut size={18} aria-hidden="true" />
+					Sign out
+				</button>
 			</form>
 		</div>
 	</header>
@@ -31,7 +38,10 @@
 		>
 			<label for="title" class="label">Title</label>
 			<input id="title" type="text" name="title" required autocomplete="off" class="input" />
-			<button type="submit" class="btn btn--primary">Add movie</button>
+			<button type="submit" class="btn btn--primary btn--icon">
+				<Plus size={18} aria-hidden="true" />
+				Add movie
+			</button>
 			{#if form?.message}
 				<p role="alert" aria-live="polite" class="error">{form.message}</p>
 			{/if}
@@ -50,11 +60,17 @@
 						<div class="list-item-actions">
 							<form method="post" action="?/markWatched" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small">Mark as watched</button>
+								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+									<Check size={16} aria-hidden="true" />
+									Mark as watched
+								</button>
 							</form>
 							<form method="post" action="?/deleteMovie" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small">Remove</button>
+								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+									<Trash2 size={16} aria-hidden="true" />
+									Remove
+								</button>
 							</form>
 						</div>
 					</li>
@@ -75,11 +91,17 @@
 						<div class="list-item-actions">
 							<form method="post" action="?/markUnwatched" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small">Mark as unwatched</button>
+								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+									<RotateCcw size={16} aria-hidden="true" />
+									Mark as unwatched
+								</button>
 							</form>
 							<form method="post" action="?/deleteMovie" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small">Remove</button>
+								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+									<Trash2 size={16} aria-hidden="true" />
+									Remove
+								</button>
 							</form>
 						</div>
 					</li>
@@ -103,7 +125,7 @@
 		gap: 1rem;
 		margin-bottom: 2.5rem;
 		padding-bottom: 1.5rem;
-		border-bottom: 1px solid #e5e5e5;
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	.header-actions {
@@ -114,19 +136,28 @@
 
 	.signed-in {
 		font-size: 0.875rem;
-		color: #666;
+		color: var(--color-text-muted);
 	}
 
 	.signed-in strong {
 		font-weight: 600;
-		color: #444;
+		color: var(--color-text-strong);
 	}
 
 	.title {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
 		margin: 0;
 		font-size: 1.5rem;
 		font-weight: 600;
 		letter-spacing: -0.02em;
+	}
+
+	.btn--icon {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
 	}
 
 	.section {
@@ -141,7 +172,7 @@
 		margin: 0 0 1rem;
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: #333;
+		color: var(--color-text-strong);
 	}
 
 	.form {
@@ -156,7 +187,7 @@
 		width: 100%;
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: #444;
+		color: var(--color-text-strong);
 	}
 
 	.input {
@@ -166,15 +197,9 @@
 		padding: 0.5rem 0.75rem;
 		font: inherit;
 		font-size: 1rem;
-		border: 1px solid #ccc;
+		border: 1px solid var(--color-border-input);
 		border-radius: 6px;
-		background: #fff;
-	}
-
-	.input:focus {
-		outline: none;
-		border-color: #666;
-		box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+		background: var(--color-input-bg);
 	}
 
 	.btn {
@@ -189,32 +214,32 @@
 	}
 
 	.btn--primary {
-		background: #1a1a1a;
-		color: #fff;
+		background: var(--color-btn-primary-bg);
+		color: var(--color-btn-primary-text);
 	}
 
 	.btn--primary:hover {
-		background: #333;
+		background: var(--color-btn-primary-hover);
 	}
 
 	.btn--secondary {
-		background: #e5e5e5;
-		color: #1a1a1a;
+		background: var(--color-btn-secondary-bg);
+		color: var(--color-text);
 	}
 
 	.btn--secondary:hover {
-		background: #d4d4d4;
+		background: var(--color-btn-secondary-hover);
 	}
 
 	.error {
 		margin: 0.5rem 0 0;
 		font-size: 0.875rem;
-		color: #b91c1c;
+		color: var(--color-error);
 	}
 
 	.empty {
 		margin: 0;
-		color: #666;
+		color: var(--color-text-muted);
 		font-size: 0.9375rem;
 	}
 
@@ -231,8 +256,8 @@
 		gap: 0.75rem;
 		padding: 0.625rem 0.75rem;
 		margin-bottom: 0.25rem;
-		background: #fff;
-		border: 1px solid #e5e5e5;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		font-size: 0.9375rem;
 	}

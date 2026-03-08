@@ -1,28 +1,44 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Mail, Lock, User, LogIn, UserPlus } from 'lucide-svelte';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
 </script>
 
-<main>
-	<h1>Log in</h1>
-	<form method="post" action="?/signInEmail" use:enhance>
-		<div>
-			<label for="email">Email</label>
-			<input id="email" type="email" name="email" required autocomplete="email" />
+<main class="login-page">
+	<h1 class="login-title">Log in</h1>
+	<form method="post" action="?/signInEmail" use:enhance class="login-form">
+		<div class="login-field">
+			<label for="email" class="login-label">
+				<Mail size={16} aria-hidden="true" />
+				Email
+			</label>
+			<input id="email" type="email" name="email" required autocomplete="email" class="login-input" />
 		</div>
-		<div>
-			<label for="password">Password</label>
-			<input id="password" type="password" name="password" required autocomplete="current-password" />
+		<div class="login-field">
+			<label for="password" class="login-label">
+				<Lock size={16} aria-hidden="true" />
+				Password
+			</label>
+			<input id="password" type="password" name="password" required autocomplete="current-password" class="login-input" />
 		</div>
-		<div>
-			<label for="name">Name (for registration)</label>
-			<input id="name" type="text" name="name" autocomplete="name" />
+		<div class="login-field">
+			<label for="name" class="login-label">
+				<User size={16} aria-hidden="true" />
+				Name (for registration)
+			</label>
+			<input id="name" type="text" name="name" autocomplete="name" class="login-input" />
 		</div>
-		<div>
-			<button type="submit">Log in</button>
-			<button type="submit" formaction="?/signUpEmail">Register</button>
+		<div class="login-actions">
+			<button type="submit" class="btn btn--primary btn--icon">
+				<LogIn size={18} aria-hidden="true" />
+				Log in
+			</button>
+			<button type="submit" formaction="?/signUpEmail" class="btn btn--secondary btn--icon">
+				<UserPlus size={18} aria-hidden="true" />
+				Register
+			</button>
 		</div>
 		{#if form?.message}
 			<p role="alert" aria-live="polite" class="error">{form.message}</p>
@@ -31,7 +47,95 @@
 </main>
 
 <style>
+	.login-page {
+		max-width: 24rem;
+		margin: 0 auto;
+		padding: 2rem 1.25rem;
+	}
+
+	.login-title {
+		margin: 0 0 1.5rem;
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--color-text);
+	}
+
+	.login-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.login-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	.login-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-text-strong);
+	}
+
+	.btn--icon {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.login-input {
+		height: 2.5rem;
+		padding: 0.5rem 0.75rem;
+		font: inherit;
+		font-size: 1rem;
+		border: 1px solid var(--color-border-input);
+		border-radius: 6px;
+		background: var(--color-input-bg);
+		color: var(--color-text);
+	}
+
+	.login-actions {
+		display: flex;
+		gap: 0.75rem;
+		margin-top: 0.25rem;
+	}
+
+	.btn {
+		height: 2.5rem;
+		padding: 0.5rem 1rem;
+		font: inherit;
+		font-size: 0.9375rem;
+		font-weight: 500;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+	}
+
+	.btn--primary {
+		background: var(--color-btn-primary-bg);
+		color: var(--color-btn-primary-text);
+	}
+
+	.btn--primary:hover {
+		background: var(--color-btn-primary-hover);
+	}
+
+	.btn--secondary {
+		background: var(--color-btn-secondary-bg);
+		color: var(--color-text);
+	}
+
+	.btn--secondary:hover {
+		background: var(--color-btn-secondary-hover);
+	}
+
 	.error {
-		color: #b91c1c;
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--color-error);
 	}
 </style>
