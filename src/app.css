@@ -89,6 +89,7 @@
 	/* ─── Color primitives: distinct colors ───────────────────────────── */
 	--red-400: #f87171;
 	--red-700: #b91c1c;
+	--blue-100: #e2f0ff;
 	--blue-300: #93c5fd;
 	--blue-400: #60a5fa;
 	--blue-600: #2563eb;
@@ -112,6 +113,7 @@
 	--color-error: var(--red-700);
 	--color-accent: var(--blue-600);
 	--color-accent-hover: var(--blue-700);
+	--color-accent-hover-muted: var(--blue-100);
 	--color-accent-muted: var(--blue-300);
 	--focus-ring: var(--size-px-2) solid var(--blue-600);
 	--focus-ring-offset: var(--size-px-2);
