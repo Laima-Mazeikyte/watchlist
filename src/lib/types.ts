@@ -6,6 +6,7 @@ export interface ListEntry {
 	id: number | string;
 	title: string;
 	favorite?: boolean;
+	poster_path?: string | null;
 }
 
 /**

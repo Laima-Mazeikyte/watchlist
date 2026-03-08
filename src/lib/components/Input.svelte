@@ -2,11 +2,13 @@
 	interface Props {
 		id: string;
 		name: string;
-		type?: 'text' | 'file';
+		type?: 'text' | 'file' | 'search';
 		accept?: string;
 		required?: boolean;
 		disabled?: boolean;
 		autocomplete?: string;
+		placeholder?: string;
+		value?: string;
 		class?: string;
 	}
 
@@ -18,6 +20,8 @@
 		required = false,
 		disabled = false,
 		autocomplete = 'off',
+		placeholder,
+		value,
 		class: className = ''
 	}: Props = $props();
 </script>
@@ -29,6 +33,8 @@
 	{accept}
 	{required}
 	{disabled}
+	{placeholder}
+	{value}
 	autocomplete={autocomplete as HTMLInputElement['autocomplete']}
 	class="input {className}"
 />

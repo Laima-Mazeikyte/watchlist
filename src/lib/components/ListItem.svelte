@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { Film } from 'lucide-svelte';
 	import Button from './Button.svelte';
 	import type { ListEntry, ListItemAction, FavoriteAction } from '$lib/types';
+
+	const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p';
 
 	interface Props {
 		item: ListEntry;
@@ -12,9 +15,27 @@
 	}
 
 	let { item, favoriteAction, actions, onFavoriteToggle, onFavoriteToggleRevert }: Props = $props();
+
+	function posterUrl(path: string | null | undefined): string | null {
+		if (!path) return null;
+		return `${TMDB_POSTER_BASE}/w92${path}`;
+	}
 </script>
 
 <li class="list-item">
+	{#if posterUrl(item.poster_path)}
+		<img
+			src={posterUrl(item.poster_path)!}
+			alt=""
+			class="list-item-poster"
+			width="46"
+			height="69"
+		/>
+	{:else}
+		<span class="list-item-poster list-item-poster--placeholder" aria-hidden="true">
+			<Film size={24} />
+		</span>
+	{/if}
 	{#if favoriteAction}
 		<form
 			method="post"
@@ -121,6 +142,23 @@
 
 	.list-item:last-child {
 		margin-bottom: 0;
+	}
+
+	.list-item-poster {
+		width: 46px;
+		height: 69px;
+		object-fit: cover;
+		border-radius: var(--radius-sm);
+		flex-shrink: 0;
+	}
+
+	.list-item-poster--placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-bg);
+		color: var(--color-text-muted);
+		border-radius: var(--radius-sm);
 	}
 
 	.list-item-title {

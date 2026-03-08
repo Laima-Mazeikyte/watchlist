@@ -6,6 +6,8 @@ export const movie = pgTable('movie', {
 	id: serial('id').primaryKey(),
 	title: text('title').notNull(),
 	year: integer('year'),
+	poster_path: text('poster_path'),
+	tmdb_id: integer('tmdb_id'),
 	watched: boolean('watched').default(false).notNull(),
 	favorite: boolean('favorite').default(false).notNull(),
 	userId: text('user_id')
