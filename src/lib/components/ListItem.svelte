@@ -19,14 +19,23 @@
 		<form
 			method="post"
 			action={favoriteAction.formAction}
-			use:enhance={() => {
+			use:enhance={({ submitter }) => {
+				const scrollY = window.scrollY;
+				const focusTarget = submitter ?? undefined;
 				onFavoriteToggle?.(item.id, !item.favorite);
 				return async ({ update }) => {
 					await update();
 					onFavoriteToggleRevert?.(item.id);
+					requestAnimationFrame(() => {
+						window.scrollTo(0, scrollY);
+						if (focusTarget?.isConnected && typeof focusTarget.focus === 'function') {
+							focusTarget.focus({ preventScroll: true });
+						}
+					});
 				};
 			}}
 			class="list-item-form list-item-star"
+			data-sveltekit-noscroll
 		>
 			{#each favoriteAction.hiddenFields as field}
 				<input type="hidden" name={field.name} value={field.value} />
@@ -53,8 +62,21 @@
 			<form
 				method="post"
 				action={action.formAction}
-				use:enhance
+				use:enhance={({ submitter }) => {
+					const scrollY = window.scrollY;
+					const focusTarget = submitter ?? undefined;
+					return async ({ update }) => {
+						await update();
+						requestAnimationFrame(() => {
+							window.scrollTo(0, scrollY);
+							if (focusTarget?.isConnected && typeof focusTarget.focus === 'function') {
+								focusTarget.focus({ preventScroll: true });
+							}
+						});
+					};
+				}}
 				class="list-item-form"
+				data-sveltekit-noscroll
 			>
 				{#each action.hiddenFields as field}
 					<input type="hidden" name={field.name} value={field.value} />
