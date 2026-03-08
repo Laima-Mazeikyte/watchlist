@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Film, LogOut, Plus, Check, RotateCcw, Trash2, Star, Upload, X } from 'lucide-svelte';
+	import { Film, LogOut, Plus, CheckCircle, RotateCcw, Trash2, Star, Upload, X } from 'lucide-svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -8,6 +8,8 @@
 	let filterWatchlistByFavorites = $state(false);
 	let filterWatchedByFavorites = $state(false);
 	let importModalOpen = $state(false);
+	let addSubmitting = $state(false);
+	let importSubmitting = $state(false);
 
 	$effect(() => {
 		if (!importModalOpen) return;
@@ -26,52 +28,62 @@
 	);
 </script>
 
-<main class="page">
-	<header class="header">
-		<h1 class="title">
-			<Film size={24} class="title-icon" aria-hidden="true" />
-			Watchlist
-		</h1>
-		<div class="header-actions">
-			<span class="signed-in">Signed in as <strong>{data.user.name}</strong></span>
-			<form method="post" action="?/signOut" use:enhance>
-				<button type="submit" class="btn btn--secondary btn--icon">
-					<LogOut size={18} aria-hidden="true" />
-					Sign out
-				</button>
-			</form>
+<main class="app">
+	<header class="toolbar">
+		<div class="toolbar-inner">
+			<h1 class="title">
+				<Film size={24} class="title-icon" aria-hidden="true" />
+				Watchlist
+			</h1>
+			<div class="toolbar-user">
+				<span class="signed-in">Signed in as <strong>{data.user.name}</strong></span>
+				<form method="post" action="?/signOut" use:enhance>
+					<button type="submit" class="btn btn--ghost btn--small btn--icon" aria-label="Logout">
+						<LogOut size={16} aria-hidden="true" />
+						Logout
+					</button>
+				</form>
+			</div>
 		</div>
 	</header>
 
-	<section class="section" aria-labelledby="add-heading">
-		<h2 id="add-heading" class="section-title">Add a movie</h2>
+	<div class="page">
+		<section class="section" aria-labelledby="add-heading">
+			<div class="section-header">
+				<h2 id="add-heading" class="section-title">Add a movie</h2>
+				<button
+					type="button"
+					class="btn btn--icon btn--ghost btn--small btn--action"
+					onclick={() => (importModalOpen = true)}
+					aria-haspopup="dialog"
+					aria-expanded={importModalOpen}
+				>
+					<Upload size={16} aria-hidden="true" />
+					<span class="btn-label">Import movies</span>
+				</button>
+			</div>
 		<div class="add-row">
 			<form
 				method="post"
 				action="?/addMovie"
 				use:enhance={({ formElement }) => {
 					return async ({ result, update }) => {
-						await update();
-						if (result.type === 'redirect') formElement.reset();
+						addSubmitting = true;
+						try {
+							await update();
+							if (result.type === 'redirect') formElement.reset();
+						} finally {
+							addSubmitting = false;
+						}
 					};
 				}}
-				class="form form--inline"
+				class="form form--add"
 			>
-				<label for="title" class="label">Title</label>
-				<input id="title" type="text" name="title" required autocomplete="off" class="input" />
-				<button type="submit" class="btn btn--primary btn--icon">
+				<label for="title" class="label visually-hidden">Title</label>
+				<input id="title" type="text" name="title" required autocomplete="off" class="input input--full" disabled={addSubmitting} />
+				<button type="submit" class="btn btn--primary btn--icon" disabled={addSubmitting}>
 					<Plus size={18} aria-hidden="true" />
-					Add movie
-				</button>
-				<button
-					type="button"
-					class="btn btn--secondary btn--icon"
-					onclick={() => (importModalOpen = true)}
-					aria-haspopup="dialog"
-					aria-expanded={importModalOpen}
-				>
-					<Upload size={18} aria-hidden="true" />
-					Import movies
+					{addSubmitting ? 'Adding…' : 'Add movie'}
 				</button>
 				{#if form?.message}
 					<p role="alert" aria-live="polite" class="error">{form.message}</p>
@@ -108,32 +120,45 @@
 						enctype="multipart/form-data"
 						use:enhance={({ formElement }) => {
 							return async ({ result, update }) => {
-								await update();
-								if (result.type === 'success' && result.data?.importSuccess) {
-									formElement.reset();
-									importModalOpen = false;
+								importSubmitting = true;
+								try {
+									await update();
+									if (result.type === 'success' && result.data?.importSuccess) {
+										formElement.reset();
+										importModalOpen = false;
+									}
+								} finally {
+									importSubmitting = false;
 								}
 							};
 						}}
-						class="form"
+						class="form form--import"
 					>
-						<label for="import-file" class="label">CSV file</label>
-						<input
-							id="import-file"
-							type="file"
-							name="file"
-							accept=".csv"
-							class="input"
-						/>
-						<button type="submit" class="btn btn--primary btn--icon">
-							<Plus size={18} aria-hidden="true" />
-							Import
-						</button>
+						<p class="form--import-description">
+							Pick a CSV file from your device. It should have a header row with a Title (or Film name) column—each row will be added as a movie to your watchlist.
+						</p>
+						<div class="form--import-fields">
+							<label for="import-file" class="label">CSV file</label>
+							<input
+								id="import-file"
+								type="file"
+								name="file"
+								accept=".csv"
+								class="input input--file"
+								disabled={importSubmitting}
+							/>
+						</div>
 						{#if form?.importSuccess && form?.importCount != null}
 							<p role="status" aria-live="polite" class="success">Added {form.importCount} movie{form.importCount === 1 ? '' : 's'}.</p>
 						{:else if form?.importError}
 							<p role="alert" aria-live="polite" class="error">{form.importError}</p>
 						{/if}
+						<div class="form--import-actions">
+							<button type="submit" class="btn btn--primary btn--icon" disabled={importSubmitting}>
+								<Plus size={18} aria-hidden="true" />
+								{importSubmitting ? 'Importing…' : 'Import'}
+							</button>
+						</div>
 					</form>
 				</div>
 			</div>
@@ -150,6 +175,7 @@
 		</div>
 		{#if watchlistFiltered.length === 0}
 			<p class="empty">
+				<Film size={20} class="empty-icon" aria-hidden="true" />
 				{filterWatchlistByFavorites ? 'No favorites in your list.' : 'No movies yet. Add one above.'}
 			</p>
 		{:else}
@@ -158,7 +184,7 @@
 					<li class="list-item">
 						<form method="post" action="?/toggleFavorite" use:enhance class="list-item-form list-item-star">
 							<input type="hidden" name="id" value={m.id} />
-							<button type="submit" class="btn btn--icon btn--star" aria-label={m.favorite ? 'Remove from favorites' : 'Add to favorites'} title={m.favorite ? 'Remove from favorites' : 'Add to favorites'}>
+							<button type="submit" class="btn btn--icon btn--ghost btn--star" aria-label={m.favorite ? 'Remove from favorites' : 'Add to favorites'} title={m.favorite ? 'Remove from favorites' : 'Add to favorites'}>
 								<Star size={18} class={m.favorite ? 'filled' : ''} />
 							</button>
 						</form>
@@ -166,16 +192,15 @@
 						<div class="list-item-actions">
 							<form method="post" action="?/markWatched" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small btn--icon">
-									<Check size={16} aria-hidden="true" />
-									Mark as watched
+								<button type="submit" class="btn btn--icon btn--ghost btn--small btn--action" aria-label="Mark as watched" title="Mark as watched">
+									<CheckCircle size={16} aria-hidden="true" />
+									<span class="btn-label">Mark as watched</span>
 								</button>
 							</form>
 							<form method="post" action="?/deleteMovie" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+								<button type="submit" class="btn btn--icon btn--ghost btn--small" aria-label="Remove" title="Remove">
 									<Trash2 size={16} aria-hidden="true" />
-									Remove
 								</button>
 							</form>
 						</div>
@@ -195,6 +220,7 @@
 		</div>
 		{#if watchedFiltered.length === 0}
 			<p class="empty">
+				<Film size={20} class="empty-icon" aria-hidden="true" />
 				{filterWatchedByFavorites ? 'No favorites in watched.' : 'No watched movies yet.'}
 			</p>
 		{:else}
@@ -203,7 +229,7 @@
 					<li class="list-item">
 						<form method="post" action="?/toggleFavorite" use:enhance class="list-item-form list-item-star">
 							<input type="hidden" name="id" value={m.id} />
-							<button type="submit" class="btn btn--icon btn--star" aria-label={m.favorite ? 'Remove from favorites' : 'Add to favorites'} title={m.favorite ? 'Remove from favorites' : 'Add to favorites'}>
+							<button type="submit" class="btn btn--icon btn--ghost btn--star" aria-label={m.favorite ? 'Remove from favorites' : 'Add to favorites'} title={m.favorite ? 'Remove from favorites' : 'Add to favorites'}>
 								<Star size={18} class={m.favorite ? 'filled' : ''} />
 							</button>
 						</form>
@@ -211,16 +237,15 @@
 						<div class="list-item-actions">
 							<form method="post" action="?/markUnwatched" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+								<button type="submit" class="btn btn--icon btn--ghost btn--small btn--action" aria-label="Mark as unwatched" title="Mark as unwatched">
 									<RotateCcw size={16} aria-hidden="true" />
-									Mark as unwatched
+									<span class="btn-label">Mark as unwatched</span>
 								</button>
 							</form>
 							<form method="post" action="?/deleteMovie" use:enhance class="list-item-form">
 								<input type="hidden" name="id" value={m.id} />
-								<button type="submit" class="btn btn--secondary btn--small btn--icon">
+								<button type="submit" class="btn btn--icon btn--ghost btn--small" aria-label="Remove" title="Remove">
 									<Trash2 size={16} aria-hidden="true" />
-									Remove
 								</button>
 							</form>
 						</div>
@@ -229,29 +254,42 @@
 			</ul>
 		{/if}
 	</section>
+	</div>
 </main>
 
 <style>
-	.page {
-		max-width: 36rem;
-		margin: 0 auto;
-		padding: var(--space-7) var(--space-5);
+	.app {
+		min-height: 100%;
 	}
 
-	.header {
+	.toolbar {
+		width: 100%;
+		background: var(--color-surface);
+		border-bottom: var(--border-width-thin) solid var(--color-border);
+	}
+
+	.toolbar-inner {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-4);
-		margin-bottom: var(--space-8);
-		padding-bottom: var(--space-6);
-		border-bottom: var(--border-width-thin) solid var(--color-border);
+		max-width: 36rem;
+		margin: 0 auto;
+		padding: var(--space-4) var(--space-5);
+		flex-wrap: wrap;
 	}
 
-	.header-actions {
+	.toolbar-user {
 		display: flex;
 		align-items: center;
-		gap: var(--space-4);
+		gap: var(--space-3);
+		margin-left: auto;
+	}
+
+	.page {
+		max-width: 36rem;
+		margin: 0 auto;
+		padding: var(--space-7) var(--space-5);
 	}
 
 	.signed-in {
@@ -385,6 +423,23 @@
 		background: var(--color-btn-secondary-hover);
 	}
 
+	.btn--ghost {
+		background: transparent;
+		color: var(--color-text);
+	}
+
+	.btn--ghost:hover {
+		background: var(--color-border);
+	}
+
+	.btn--action {
+		color: var(--color-text);
+	}
+
+	.btn--action:hover {
+		color: var(--color-text-strong);
+	}
+
 	.error {
 		margin: var(--space-2) 0 0;
 		font-size: var(--font-size-sm);
@@ -399,20 +454,28 @@
 
 	.add-row {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: var(--space-3);
+		width: 100%;
 	}
 
-	.form--inline {
+	.form--add {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: flex-end;
+		align-items: center;
 		gap: var(--space-3);
+		width: 100%;
 	}
 
-	.form--inline .label {
+	.form--add .label {
 		margin-bottom: 0;
+	}
+
+	.input--full {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.btn-label {
+		white-space: nowrap;
 	}
 
 	.modal-backdrop {
@@ -465,10 +528,55 @@
 		color: var(--color-text);
 	}
 
+	.form--import {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-4);
+	}
+
+	.form--import-description {
+		margin: 0;
+		font-size: var(--font-size-sm);
+		color: var(--color-text-muted);
+		line-height: 1.5;
+	}
+
+	.form--import-fields {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		width: 100%;
+		min-width: 0;
+	}
+
+	.form--import-fields .input--file {
+		width: 100%;
+		max-width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
+	}
+
+	.form--import-actions {
+		display: flex;
+		justify-content: flex-start;
+		width: 100%;
+		margin-top: var(--space-2);
+	}
+
 	.empty {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		margin: 0;
 		color: var(--color-text-muted);
 		font-size: var(--font-size-ui);
+	}
+
+	.empty-icon {
+		flex-shrink: 0;
+		color: var(--color-text-muted);
+		opacity: 0.8;
 	}
 
 	.list {
@@ -488,6 +596,10 @@
 		border: var(--border-width-thin) solid var(--color-border);
 		border-radius: var(--radius-md);
 		font-size: var(--font-size-ui);
+	}
+
+	.list-item:hover {
+		background: var(--color-bg);
 	}
 
 	.list-item-title {
@@ -523,7 +635,6 @@
 
 	.btn--star {
 		padding: var(--space-1);
-		background: transparent;
 		color: var(--color-accent);
 	}
 
@@ -539,4 +650,5 @@
 	.btn--star :global(svg.filled) {
 		fill: currentColor;
 	}
+
 </style>

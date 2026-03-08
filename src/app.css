@@ -1,5 +1,17 @@
 /* Design tokens – single source of truth */
 
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
 :root {
 	/* ─── Sizing primitives ───────────────────────────────────────────── */
 	/* Layout scale (rem) */
@@ -104,6 +116,16 @@
 	--focus-ring: var(--size-px-2) solid var(--blue-600);
 	--focus-ring-offset: var(--size-px-2);
 	color-scheme: light;
+}
+
+/* Focus visible for keyboard navigation */
+:focus {
+	outline: none;
+}
+
+:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-ring-offset);
 }
 
 @media (prefers-color-scheme: dark) {
