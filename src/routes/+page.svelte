@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Film, LogOut, Plus, RefreshCw, CheckCircle, RotateCcw, Search, Trash2, Star, ClipboardPaste } from 'lucide-svelte';
+	import { Film, LogOut, Plus, CheckCircle, RotateCcw, Search, Trash2, ClipboardPaste } from 'lucide-svelte';
 	import {
 		Button,
 		Input,
@@ -11,72 +11,24 @@
 		Section,
 		Toolbar
 	} from '$lib/components';
-	import type { ListEntry, ListItemAction, FavoriteAction } from '$lib/types';
+	import type { ListEntry, ListItemAction } from '$lib/types';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let filterWatchlistByFavorites = $state(false);
-	let filterWatchedByFavorites = $state(false);
 	let importModalOpen = $state(false);
 	let addSubmittingByTmdbId = $state<number | null>(null);
 	let importSubmitting = $state(false);
-	let backfillSubmitting = $state(false);
 
 	const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p';
 	function posterUrl(path: string | null, size: string = 'w154'): string | null {
 		if (!path) return null;
 		return `${TMDB_POSTER_BASE}/${size}${path}`;
 	}
-	let optimisticFavorites = $state<Record<string, boolean>>({});
+	const watchlistWithOptimistic = $derived(data.watchlist as ListEntry[]);
+	const watchedWithOptimistic = $derived(data.watched as ListEntry[]);
 
-	// Full lists with optimistic favorite merged (for instant star feedback)
-	const watchlistWithOptimistic = $derived(
-		(data.watchlist as ListEntry[]).map((m) => ({
-			...m,
-			favorite: optimisticFavorites[String(m.id)] ?? m.favorite
-		}))
-	);
-	const watchedWithOptimistic = $derived(
-		(data.watched as ListEntry[]).map((m) => ({
-			...m,
-			favorite: optimisticFavorites[String(m.id)] ?? m.favorite
-		}))
-	);
-
-	// Apply "favorites only" filter for display
-	const watchlistDisplay = $derived(
-		filterWatchlistByFavorites ? watchlistWithOptimistic.filter((m) => m.favorite) : watchlistWithOptimistic
-	);
-	const watchedDisplay = $derived(
-		filterWatchedByFavorites ? watchedWithOptimistic.filter((m) => m.favorite) : watchedWithOptimistic
-	);
-
-	function setOptimisticFavorite(id: number | string, value: boolean) {
-		optimisticFavorites = { ...optimisticFavorites, [String(id)]: value };
-	}
-	function clearOptimisticFavorite(id: number | string) {
-		const key = String(id);
-		const { [key]: _, ...rest } = optimisticFavorites;
-		optimisticFavorites = rest;
-	}
-
-	// Generic action config: favorite toggle (same for both lists)
-	const favoriteActionBase: Omit<FavoriteAction, 'hiddenFields' | 'ariaLabel'> & { ariaLabel: string } = {
-		formAction: '?/toggleFavorite',
-		method: 'post',
-		ariaLabel: '',
-		icon: Star
-	};
-	function getFavoriteAction(item: ListEntry): FavoriteAction {
-		return {
-			...favoriteActionBase,
-			ariaLabel: item.favorite ? 'Remove from favorites' : 'Add to favorites',
-			hiddenFields: [{ name: 'id', value: item.id }]
-		};
-	}
-
-	// Watchlist row actions: mark watched, delete
+	// Watchlist row actions: mark watched
 	function getWatchlistActions(item: ListEntry): ListItemAction[] {
 		return [
 			{
@@ -86,20 +38,11 @@
 				label: 'Mark as watched',
 				ariaLabel: 'Mark as watched',
 				icon: CheckCircle
-			},
-			{
-				formAction: '?/deleteMovie',
-				method: 'post',
-				hiddenFields: [{ name: 'id', value: item.id }],
-				label: 'Remove',
-				ariaLabel: 'Remove',
-				icon: Trash2,
-				iconOnly: true
 			}
 		];
 	}
 
-	// Watched row actions: mark unwatched, delete
+	// Watched row actions: mark unwatched
 	function getWatchedActions(item: ListEntry): ListItemAction[] {
 		return [
 			{
@@ -109,17 +52,20 @@
 				label: 'Mark as unwatched',
 				ariaLabel: 'Mark as unwatched',
 				icon: RotateCcw
-			},
-			{
-				formAction: '?/deleteMovie',
-				method: 'post',
-				hiddenFields: [{ name: 'id', value: item.id }],
-				label: 'Remove',
-				ariaLabel: 'Remove',
-				icon: Trash2,
-				iconOnly: true
 			}
 		];
+	}
+
+	// Scrap (remove) action — rendered below the card
+	function getScrapAction(item: ListEntry): ListItemAction {
+		return {
+			formAction: '?/deleteMovie',
+			method: 'post',
+			hiddenFields: [{ name: 'id', value: item.id }],
+			label: 'Scrap',
+			ariaLabel: 'Scrap',
+			icon: Trash2
+		};
 	}
 </script>
 
@@ -149,38 +95,6 @@
 	<div class="page">
 		<Section title="Add a movie" titleId="add-heading">
 			{#snippet headerAction()}
-				{#if data.tmdbConfigured}
-					<form
-						method="post"
-						action="?/backfillPosters"
-						use:enhance={() => {
-							backfillSubmitting = true;
-							return async ({ update }) => {
-								try {
-									await update();
-								} finally {
-									backfillSubmitting = false;
-								}
-							};
-						}}
-						class="header-action-form"
-					>
-						<Button
-							variant="ghost"
-							size="small"
-							type="submit"
-							disabled={backfillSubmitting}
-							class="btn--action"
-						>
-							{#snippet children()}
-								<RefreshCw size={16} aria-hidden="true" />
-								<span class="btn-label"
-									>{backfillSubmitting ? 'Updating…' : 'Update posters'}</span
-								>
-							{/snippet}
-						</Button>
-					</form>
-				{/if}
 				<Button
 					variant="ghost"
 					size="small"
@@ -218,14 +132,6 @@
 					</div>
 					{#if form?.message}
 						<p role="alert" aria-live="polite" class="error">{form.message}</p>
-					{/if}
-					{#if form?.backfillError}
-						<p role="alert" aria-live="polite" class="error">{form.backfillError}</p>
-					{/if}
-					{#if form?.backfillSuccess && form?.backfillCount != null}
-						<p role="status" aria-live="polite" class="success"
-							>Updated {form.backfillCount} poster{form.backfillCount === 1 ? '' : 's'}.</p
-						>
 					{/if}
 					{#if data.searchQuery && data.searchResults.length === 0}
 						<p class="muted">No results for "{data.searchQuery}". Try a different search.</p>
@@ -350,20 +256,16 @@
 		<ItemList
 			title="Your list"
 			titleId="list-heading"
-			items={watchlistDisplay}
-			bind:filterChecked={filterWatchlistByFavorites}
-			filterLabel="Favorites only"
+			items={watchlistWithOptimistic}
 			emptyMessage="No movies yet. Add one above."
-			emptyMessageFiltered="No favorites in your list."
 			emptyIcon={emptyListIcon}
 		>
 			{#snippet children(item)}
 				<ListItem
 					item={item}
-					favoriteAction={getFavoriteAction(item)}
 					actions={getWatchlistActions(item)}
-					onFavoriteToggle={setOptimisticFavorite}
-					onFavoriteToggleRevert={clearOptimisticFavorite}
+					mainActionLabel="WATCHED IT!"
+					scrapAction={getScrapAction(item)}
 				/>
 			{/snippet}
 		</ItemList>
@@ -371,20 +273,16 @@
 		<ItemList
 			title="Watched"
 			titleId="watched-heading"
-			items={watchedDisplay}
-			bind:filterChecked={filterWatchedByFavorites}
-			filterLabel="Favorites only"
+			items={watchedWithOptimistic}
 			emptyMessage="No watched movies yet."
-			emptyMessageFiltered="No favorites in watched."
 			emptyIcon={emptyListIcon}
 		>
 			{#snippet children(item)}
 				<ListItem
 					item={item}
-					favoriteAction={getFavoriteAction(item)}
 					actions={getWatchedActions(item)}
-					onFavoriteToggle={setOptimisticFavorite}
-					onFavoriteToggleRevert={clearOptimisticFavorite}
+					mainActionLabel="UNWATCHED"
+					scrapAction={getScrapAction(item)}
 				/>
 			{/snippet}
 		</ItemList>

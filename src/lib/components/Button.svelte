@@ -49,7 +49,7 @@
 <style>
 	.btn {
 		height: 2.5rem;
-		padding: var(--space-2) var(--space-4);
+		padding: var(--space-6);
 		font: inherit;
 		font-size: var(--font-size-ui);
 		font-weight: 500;
@@ -102,7 +102,7 @@
 
 	.btn--small {
 		height: 2rem;
-		padding: var(--space-1) var(--space-2);
+		padding: var(--space-6);
 		font-size: var(--font-size-xs);
 	}
 

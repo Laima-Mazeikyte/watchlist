@@ -53,6 +53,7 @@
 
 	/* Font family */
 	--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-condensed: 'Barlow Condensed', sans-serif;
 
 	/* Font sizes (from type scale) */
 	--font-size-xs: var(--size-text-xs);
@@ -118,6 +119,12 @@
 	--focus-ring: var(--size-px-2) solid var(--blue-600);
 	--focus-ring-offset: var(--size-px-2);
 	color-scheme: light;
+
+	/* ─── Ticket card colors ──────────────────────────────────────────── */
+	--color-ticket: #fef3c7;
+	--color-ticket-stub: #fde68a;
+	--color-ticket-text: #78350f;
+	--color-ticket-text-muted: #a16207;
 }
 
 /* Focus visible for keyboard navigation */

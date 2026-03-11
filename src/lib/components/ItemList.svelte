@@ -7,10 +7,10 @@
 		title: string;
 		titleId: string;
 		items: ListEntry[];
-		filterLabel: string;
+		filterLabel?: string;
 		filterChecked?: boolean;
 		emptyMessage: string;
-		emptyMessageFiltered: string;
+		emptyMessageFiltered?: string;
 		emptyIcon?: Snippet;
 		children: Snippet<[ListEntry]>;
 	}
@@ -28,16 +28,19 @@
 	}: Props = $props();
 
 	const isEmpty = $derived(items.length === 0);
-	const displayMessage = $derived(filterChecked ? emptyMessageFiltered : emptyMessage);
+	const displayMessage = $derived(filterChecked ? (emptyMessageFiltered ?? emptyMessage) : emptyMessage);
+	const showFilter = $derived(filterLabel != null && filterLabel !== '');
 </script>
 
 <section class="list-section" aria-labelledby={titleId}>
 	<div class="section-header">
 		<h2 id={titleId} class="section-title">{title}</h2>
-		<label class="filter-control">
-			<input type="checkbox" bind:checked={filterChecked} class="filter-checkbox" />
-			<span class="filter-label">{filterLabel}</span>
-		</label>
+		{#if showFilter}
+			<label class="filter-control">
+				<input type="checkbox" bind:checked={filterChecked} class="filter-checkbox" />
+				<span class="filter-label">{filterLabel}</span>
+			</label>
+		{/if}
 	</div>
 	{#if isEmpty}
 		<EmptyState message={displayMessage} icon={emptyIcon} />
@@ -104,5 +107,20 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		width: fit-content;
+		max-width: min(100%, 44rem);
+	}
+
+	.list > li {
+		width: 100%;
+	}
+
+	.list > li:first-child {
+		width: fit-content;
+	}
+
+	.list > li:first-child :global(.ticket) {
+		width: fit-content;
+		flex: 0 0 auto;
 	}
 </style>
