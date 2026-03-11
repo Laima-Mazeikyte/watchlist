@@ -5,5 +5,6 @@ export { default as ItemList } from './ItemList.svelte';
 export { default as Label } from './Label.svelte';
 export { default as ListItem } from './ListItem.svelte';
 export { default as Modal } from './Modal.svelte';
+export { default as SearchDropdown } from './SearchDropdown.svelte';
 export { default as Section } from './Section.svelte';
 export { default as Toolbar } from './Toolbar.svelte';

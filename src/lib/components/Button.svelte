@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		variant?: 'primary' | 'ghost' | 'secondary' | 'star';
+		variant?: 'primary' | 'ghost' | 'secondary' | 'star' | 'minimal';
 		size?: 'normal' | 'small';
 		type?: 'button' | 'submit';
 		disabled?: boolean;
@@ -98,6 +98,16 @@
 
 	.btn--ghost.btn--action:hover {
 		color: var(--color-text-strong);
+	}
+
+	.btn--minimal {
+		background: transparent;
+		color: var(--color-text-muted);
+		padding: var(--space-1) var(--space-2);
+	}
+
+	.btn--minimal:hover {
+		color: var(--color-text);
 	}
 
 	.btn--small {

@@ -2,18 +2,21 @@
 	import type { Snippet } from 'svelte';
 
 	interface Props {
-		title: Snippet;
+		search?: Snippet;
 		user: Snippet;
 	}
 
-	let { title, user }: Props = $props();
+	let { search, user }: Props = $props();
 </script>
 
 <header class="toolbar">
 	<div class="toolbar-inner">
-		<h1 class="title">
-			{@render title()}
-		</h1>
+		<div class="toolbar-spacer"></div>
+		{#if search}
+			<div class="toolbar-search">
+				{@render search()}
+			</div>
+		{/if}
 		<div class="toolbar-user">
 			{@render user()}
 		</div>
@@ -23,36 +26,37 @@
 <style>
 	.toolbar {
 		width: 100%;
-		background: var(--color-surface);
-		border-bottom: var(--border-width-thin) solid var(--color-border);
+		background: transparent;
 	}
 
 	.toolbar-inner {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-4);
-		max-width: 36rem;
-		margin: 0 auto;
+		justify-content: center;
+		gap: var(--space-5);
+		width: 100%;
 		padding: var(--space-4) var(--space-5);
-		flex-wrap: wrap;
+	}
+
+	.toolbar-spacer {
+		flex: 1;
+	}
+
+	.toolbar-search {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-3);
+		width: 100%;
+		max-width: 520px;
 	}
 
 	.toolbar-user {
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: var(--space-3);
-		margin-left: auto;
-	}
-
-	.title {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-2);
-		margin: 0;
-		font-size: var(--font-size-lg);
-		font-weight: 600;
-		letter-spacing: -0.02em;
+		flex: 1;
 	}
 
 	.toolbar-user :global(.signed-in) {
@@ -63,5 +67,29 @@
 	.toolbar-user :global(.signed-in strong) {
 		font-weight: 600;
 		color: var(--color-text-strong);
+	}
+
+	@media (max-width: 768px) {
+		.toolbar-inner {
+			flex-wrap: wrap;
+			gap: var(--space-4);
+			padding: var(--space-4);
+		}
+
+		.toolbar-spacer {
+			display: none;
+		}
+
+		.toolbar-search {
+			order: 2;
+			flex-basis: 100%;
+			max-width: none;
+		}
+
+		.toolbar-user {
+			order: 1;
+			flex: 0;
+			margin-left: auto;
+		}
 	}
 </style>

@@ -7,14 +7,14 @@
 	const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p';
 
 	const CARD_COLORS = [
-		{ bg: '#59A4BB', stub: '#4a8fa3', text: '#1a3d47', textMuted: '#2d5a68' },
-		{ bg: '#66CEDF', stub: '#52b5c5', text: '#1a4650', textMuted: '#2d6a78' },
-		{ bg: '#6CD78F', stub: '#5ac47d', text: '#1a4028', textMuted: '#2d5f3d' },
-		{ bg: '#AD6E39', stub: '#9a5f2e', text: '#2e1d0f', textMuted: '#4a3520' },
-		{ bg: '#B44E40', stub: '#9f4338', text: '#2e1512', textMuted: '#4a2520' },
-		{ bg: '#C48CA5', stub: '#b37a94', text: '#3d2532', textMuted: '#5c3a4a' },
-		{ bg: '#C6BA88', stub: '#b8ab79', text: '#3d3a2e', textMuted: '#5c5746' },
-		{ bg: '#D5C25D', stub: '#c4b24e', text: '#3d3818', textMuted: '#5c5428' }
+		{ bg: '#D4C4B0', stub: '#C7B7A3', text: '#4a4438', textMuted: '#686052' },
+		{ bg: '#C9B8A1', stub: '#BCAB94', text: '#4a4336', textMuted: '#685e4e' },
+		{ bg: '#C7C9A8', stub: '#BABC9B', text: '#48483a', textMuted: '#65654f' },
+		{ bg: '#CDB099', stub: '#C0A38C', text: '#4a4238', textMuted: '#685e52' },
+		{ bg: '#D1A79E', stub: '#C49A91', text: '#4a3f3c', textMuted: '#685a56' },
+		{ bg: '#DBBCB0', stub: '#CEAFA3', text: '#4a403a', textMuted: '#685c54' },
+		{ bg: '#DDD5B7', stub: '#D0C8AA', text: '#4a4840', textMuted: '#68655b' },
+		{ bg: '#E2D9AC', stub: '#D5CC9F', text: '#4a4838', textMuted: '#686552' }
 	];
 
 	function hashString(str: string): number {
@@ -40,6 +40,7 @@
 		scrapAction?: ListItemAction | null;
 		onFavoriteToggle?: (id: number | string, newFavorite: boolean) => void;
 		onFavoriteToggleRevert?: (id: number | string) => void;
+		onStubTear?: (id: number | string) => void;
 	}
 
 	let {
@@ -49,7 +50,8 @@
 		mainActionLabel,
 		scrapAction,
 		onFavoriteToggle,
-		onFavoriteToggleRevert
+		onFavoriteToggleRevert,
+		onStubTear
 	}: Props = $props();
 
 	const primaryAction = $derived(actions[0] ?? null);
@@ -59,7 +61,7 @@
 
 	function posterUrl(path: string | null | undefined): string | null {
 		if (!path) return null;
-		return `${TMDB_POSTER_BASE}/w154${path}`;
+		return `${TMDB_POSTER_BASE}/w185${path}`;
 	}
 
 	const clipId = $derived(`ticket-clip-${item.id}`);
@@ -163,8 +165,8 @@
 						src={posterUrl(item.poster_path)!}
 						alt=""
 						class="ticket-poster"
-						width="80"
-						height="120"
+						width="100"
+						height="150"
 					/>
 				{:else}
 					<span class="ticket-poster ticket-poster--placeholder" aria-hidden="true">
@@ -298,21 +300,25 @@
 				class:ticket-stub--tearing={stubTearing}
 				class:ticket-stub--watched={item.watched}
 				style="clip-path: url(#{clipId}-stub);"
-				use:enhance={({ submitter }) => {
-					const scrollY = window.scrollY;
-					const focusTarget = submitter ?? undefined;
-					stubTearing = true;
-					return async ({ update }) => {
-						await update();
-						stubTearing = false;
-						requestAnimationFrame(() => {
-							window.scrollTo(0, scrollY);
-							if (focusTarget?.isConnected && typeof focusTarget.focus === 'function') {
-								focusTarget.focus({ preventScroll: true });
-							}
-						});
-					};
-				}}
+			use:enhance={({ submitter }) => {
+				const scrollY = window.scrollY;
+				const focusTarget = submitter ?? undefined;
+				stubTearing = true;
+				// If marking as watched (stub is being torn off), notify parent
+				if (!item.watched) {
+					onStubTear?.(item.id);
+				}
+				return async ({ update }) => {
+					await update();
+					stubTearing = false;
+					requestAnimationFrame(() => {
+						window.scrollTo(0, scrollY);
+						if (focusTarget?.isConnected && typeof focusTarget.focus === 'function') {
+							focusTarget.focus({ preventScroll: true });
+						}
+					});
+				};
+			}}
 				data-sveltekit-noscroll
 			>
 				{#each primaryAction.hiddenFields as field}
@@ -341,11 +347,6 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
-		margin-bottom: var(--space-2);
-	}
-
-	.ticket-wrapper:last-child {
-		margin-bottom: 0;
 	}
 
 	.ticket {
@@ -380,16 +381,17 @@
 	}
 
 	.ticket-poster {
-		width: 80px;
-		height: 120px;
+		width: 100px;
+		height: 150px;
 		object-fit: cover;
 		border-radius: var(--radius-sm);
 		flex-shrink: 0;
+		mix-blend-mode: darken;
 	}
 
 	.ticket-poster--placeholder {
-		width: 80px;
-		height: 120px;
+		width: 100px;
+		height: 150px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -407,8 +409,8 @@
 	}
 
 	.ticket-title {
-		font-family: var(--font-condensed);
-		font-size: var(--font-size-md);
+		font-family: var(--font-slab);
+		font-size: var(--font-size-lg);
 		font-weight: 600;
 		color: var(--color-ticket-text);
 		line-height: 1.2;
@@ -419,12 +421,11 @@
 	}
 
 	.ticket-year {
-		font-family: var(--font-condensed);
+		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
 		font-weight: 500;
 		color: var(--color-ticket-text-muted);
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+		letter-spacing: 0.02em;
 	}
 
 	.ticket-actions {
