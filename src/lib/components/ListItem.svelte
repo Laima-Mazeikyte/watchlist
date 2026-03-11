@@ -6,6 +6,32 @@
 
 	const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p';
 
+	const CARD_COLORS = [
+		{ bg: '#59A4BB', stub: '#4a8fa3', text: '#1a3d47', textMuted: '#2d5a68' },
+		{ bg: '#66CEDF', stub: '#52b5c5', text: '#1a4650', textMuted: '#2d6a78' },
+		{ bg: '#6CD78F', stub: '#5ac47d', text: '#1a4028', textMuted: '#2d5f3d' },
+		{ bg: '#AD6E39', stub: '#9a5f2e', text: '#2e1d0f', textMuted: '#4a3520' },
+		{ bg: '#B44E40', stub: '#9f4338', text: '#2e1512', textMuted: '#4a2520' },
+		{ bg: '#C48CA5', stub: '#b37a94', text: '#3d2532', textMuted: '#5c3a4a' },
+		{ bg: '#C6BA88', stub: '#b8ab79', text: '#3d3a2e', textMuted: '#5c5746' },
+		{ bg: '#D5C25D', stub: '#c4b24e', text: '#3d3818', textMuted: '#5c5428' }
+	];
+
+	function hashString(str: string): number {
+		let hash = 0;
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charCodeAt(i);
+			hash = (hash << 5) - hash + char;
+			hash = hash & hash;
+		}
+		return hash;
+	}
+
+	function getCardColor(id: number | string): (typeof CARD_COLORS)[0] {
+		const hash = typeof id === 'number' ? id : hashString(String(id));
+		return CARD_COLORS[Math.abs(hash) % CARD_COLORS.length];
+	}
+
 	interface Props {
 		item: ListEntry;
 		favoriteAction?: FavoriteAction | null;
@@ -37,6 +63,10 @@
 	}
 
 	const clipId = $derived(`ticket-clip-${item.id}`);
+	const cardColor = $derived(getCardColor(item.id));
+	const cardStyle = $derived(
+		`--color-ticket: ${cardColor.bg}; --color-ticket-stub: ${cardColor.stub}; --color-ticket-text: ${cardColor.text}; --color-ticket-text-muted: ${cardColor.textMuted};`
+	);
 </script>
 
 <!-- Hidden SVG with clipPath definitions -->
@@ -123,7 +153,7 @@
 	</defs>
 </svg>
 
-<li class="ticket-wrapper">
+<li class="ticket-wrapper" style={cardStyle}>
 	<div class="ticket">
 		<!-- Left body panel: movie info -->
 		<div class="ticket-body" style="clip-path: url(#{clipId}-body);">
@@ -133,12 +163,12 @@
 						src={posterUrl(item.poster_path)!}
 						alt=""
 						class="ticket-poster"
-						width="60"
-						height="90"
+						width="80"
+						height="120"
 					/>
 				{:else}
 					<span class="ticket-poster ticket-poster--placeholder" aria-hidden="true">
-						<Film size={20} />
+						<Film size={24} />
 					</span>
 				{/if}
 
@@ -225,6 +255,37 @@
 						</Button>
 					</form>
 				{/if}
+
+				{#if scrapAction}
+					<form
+						method="post"
+						action={scrapAction.formAction}
+						use:enhance={({ submitter }) => {
+							const scrollY = window.scrollY;
+							const focusTarget = submitter ?? undefined;
+							return async ({ update }) => {
+								await update();
+								requestAnimationFrame(() => {
+									window.scrollTo(0, scrollY);
+									if (focusTarget?.isConnected && typeof focusTarget.focus === 'function') {
+										focusTarget.focus({ preventScroll: true });
+									}
+								});
+							};
+						}}
+						class="ticket-remove-form"
+						data-sveltekit-noscroll
+					>
+						{#each scrapAction.hiddenFields as field}
+							<input type="hidden" name={field.name} value={field.value} />
+						{/each}
+						<Button variant="ghost" size="small" type="submit" ariaLabel="Remove" class="btn--remove">
+							{#snippet children()}
+								<X size={14} aria-hidden="true" />
+							{/snippet}
+						</Button>
+					</form>
+				{/if}
 			</div>
 		</div>
 
@@ -235,6 +296,7 @@
 				action={primaryAction.formAction}
 				class="ticket-stub"
 				class:ticket-stub--tearing={stubTearing}
+				class:ticket-stub--watched={item.watched}
 				style="clip-path: url(#{clipId}-stub);"
 				use:enhance={({ submitter }) => {
 					const scrollY = window.scrollY;
@@ -261,43 +323,16 @@
 					class="stub-button"
 					aria-label={primaryAction.ariaLabel ?? primaryAction.label}
 				>
-					<span class="stub-label">{mainActionLabel}</span>
+					{#if item.watched}
+						{@const Icon = primaryAction.icon}
+						<Icon size={20} class="stub-icon" aria-hidden="true" />
+					{:else}
+						<span class="stub-label">{mainActionLabel}</span>
+					{/if}
 				</button>
 			</form>
 		{/if}
 	</div>
-
-	<!-- Remove button: outside the ticket -->
-	{#if scrapAction}
-		<form
-			method="post"
-			action={scrapAction.formAction}
-			use:enhance={({ submitter }) => {
-				const scrollY = window.scrollY;
-				const focusTarget = submitter ?? undefined;
-				return async ({ update }) => {
-					await update();
-					requestAnimationFrame(() => {
-						window.scrollTo(0, scrollY);
-						if (focusTarget?.isConnected && typeof focusTarget.focus === 'function') {
-							focusTarget.focus({ preventScroll: true });
-						}
-					});
-				};
-			}}
-			class="ticket-remove-form"
-			data-sveltekit-noscroll
-		>
-			{#each scrapAction.hiddenFields as field}
-				<input type="hidden" name={field.name} value={field.value} />
-			{/each}
-			<Button variant="ghost" size="small" type="submit" ariaLabel="Remove" class="btn--remove">
-				{#snippet children()}
-					<X size={14} aria-hidden="true" />
-				{/snippet}
-			</Button>
-		</form>
-	{/if}
 </li>
 
 <style>
@@ -316,13 +351,13 @@
 	.ticket {
 		display: flex;
 		align-items: stretch;
-		height: 144px;
+		height: 180px;
 		filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
 	}
 
 	.ticket-body {
-		width: 280px;
-		height: 144px;
+		width: 320px;
+		height: 180px;
 		flex-shrink: 0;
 		background: var(--color-ticket);
 		transition: background 0.15s ease;
@@ -333,31 +368,32 @@
 	}
 
 	.ticket-body-inner {
+		position: relative;
 		width: 100%;
 		height: 100%;
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
 		padding: var(--space-3) var(--space-4);
-		padding-right: var(--space-2);
+		padding-right: var(--space-4);
 		box-sizing: border-box;
 	}
 
 	.ticket-poster {
-		width: 60px;
-		height: 90px;
+		width: 80px;
+		height: 120px;
 		object-fit: cover;
 		border-radius: var(--radius-sm);
 		flex-shrink: 0;
 	}
 
 	.ticket-poster--placeholder {
-		width: 60px;
-		height: 90px;
+		width: 80px;
+		height: 120px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(120, 53, 15, 0.1);
+		background: rgba(0, 0, 0, 0.08);
 		color: var(--color-ticket-text-muted);
 		border-radius: var(--radius-sm);
 	}
@@ -376,9 +412,10 @@
 		font-weight: 600;
 		color: var(--color-ticket-text);
 		line-height: 1.2;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 
 	.ticket-year {
@@ -415,7 +452,7 @@
 
 	.ticket-star-form :global(.btn--star:hover) {
 		color: var(--color-ticket-text);
-		background: rgba(120, 53, 15, 0.12);
+		background: rgba(0, 0, 0, 0.1);
 	}
 
 	.ticket-star-form :global(.btn--star svg.filled) {
@@ -425,7 +462,7 @@
 
 	.ticket-stub {
 		width: 80px;
-		height: 144px;
+		height: 180px;
 		flex-shrink: 0;
 		background: var(--color-ticket-stub);
 		margin: 0;
@@ -437,7 +474,7 @@
 	}
 
 	.ticket-stub:hover {
-		background: #f6c843;
+		filter: brightness(1.1);
 	}
 
 	@keyframes tear-off {
@@ -449,6 +486,14 @@
 
 	.ticket-stub--tearing {
 		animation: tear-off 0.35s cubic-bezier(0.4, 0, 0.8, 0.6) forwards;
+	}
+
+	.ticket-stub--watched {
+		background: transparent;
+	}
+
+	.ticket-stub--watched:hover {
+		background: var(--color-surface-hover, rgba(0, 0, 0, 0.05));
 	}
 
 	.stub-button {
@@ -476,30 +521,58 @@
 		user-select: none;
 	}
 
+	.stub-button :global(.stub-icon) {
+		color: var(--color-text-muted);
+		opacity: 0;
+		transition: color 0.15s ease, opacity 0.15s ease;
+	}
+
+	.ticket-stub--watched:hover .stub-button :global(.stub-icon) {
+		color: var(--color-text);
+		opacity: 0.6;
+	}
+
 	.ticket-remove-form {
-		display: inline-flex;
+		position: absolute;
+		top: var(--space-1);
+		right: var(--space-2);
 		margin: 0;
-		flex-shrink: 0;
 	}
 
 	.ticket-remove-form :global(.btn--remove) {
-		--remove-pad: 4px;
-		padding: var(--remove-pad);
-		min-width: calc(14px + 2 * var(--remove-pad));
-		min-height: calc(14px + 2 * var(--remove-pad));
-		color: var(--color-text-muted);
+		--remove-size: 22px;
+		padding: 0;
+		width: var(--remove-size);
+		height: var(--remove-size);
+		min-width: var(--remove-size);
+		min-height: var(--remove-size);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		color: var(--color-ticket-text-muted);
+		background: transparent;
 		opacity: 0;
-		transition: opacity 0.15s ease;
+		transition:
+			opacity 0.15s ease,
+			color 0.15s ease,
+			background 0.15s ease,
+			transform 0.1s ease;
 	}
 
-	.ticket-wrapper:hover .ticket-remove-form :global(.btn--remove),
-	.ticket-remove-form :global(.btn--remove:hover),
+	.ticket-body:hover .ticket-remove-form :global(.btn--remove),
 	.ticket-remove-form :global(.btn--remove:focus-visible) {
-		opacity: 1;
-		color: var(--gray-400);
+		opacity: 0.6;
 	}
 
 	.ticket-remove-form :global(.btn--remove:hover) {
-		color: var(--color-text);
+		opacity: 1;
+		color: var(--color-ticket-text);
+		background: rgba(0, 0, 0, 0.1);
+		transform: scale(1.1);
+	}
+
+	.ticket-remove-form :global(.btn--remove:active) {
+		transform: scale(0.95);
 	}
 </style>

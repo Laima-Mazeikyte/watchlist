@@ -24,14 +24,9 @@ export const load: PageServerLoad = async (event) => {
 		return redirect(302, '/login');
 	}
 	const userId = event.locals.user.id;
-	const watchlist = await db.query.movie.findMany({
-		where: and(eq(movie.userId, userId), eq(movie.watched, false)),
-		columns: { id: true, title: true, year: true, favorite: true, poster_path: true },
-		orderBy: desc(movie.id)
-	});
-	const watched = await db.query.movie.findMany({
-		where: and(eq(movie.userId, userId), eq(movie.watched, true)),
-		columns: { id: true, title: true, year: true, favorite: true, poster_path: true },
+	const movies = await db.query.movie.findMany({
+		where: eq(movie.userId, userId),
+		columns: { id: true, title: true, year: true, favorite: true, poster_path: true, watched: true },
 		orderBy: desc(movie.id)
 	});
 
@@ -48,8 +43,7 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		user: event.locals.user,
-		watchlist,
-		watched,
+		movies,
 		searchResults,
 		searchQuery: searchQuery || undefined,
 		tmdbConfigured: isTmdbConfigured()

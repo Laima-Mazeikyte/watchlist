@@ -25,11 +25,21 @@
 		if (!path) return null;
 		return `${TMDB_POSTER_BASE}/${size}${path}`;
 	}
-	const watchlistWithOptimistic = $derived(data.watchlist as ListEntry[]);
-	const watchedWithOptimistic = $derived(data.watched as ListEntry[]);
+	const movies = $derived(data.movies as ListEntry[]);
 
-	// Watchlist row actions: mark watched
-	function getWatchlistActions(item: ListEntry): ListItemAction[] {
+	function getItemActions(item: ListEntry): ListItemAction[] {
+		if (item.watched) {
+			return [
+				{
+					formAction: '?/markUnwatched',
+					method: 'post',
+					hiddenFields: [{ name: 'id', value: item.id }],
+					label: 'Mark as unwatched',
+					ariaLabel: 'Mark as unwatched',
+					icon: RotateCcw
+				}
+			];
+		}
 		return [
 			{
 				formAction: '?/markWatched',
@@ -38,20 +48,6 @@
 				label: 'Mark as watched',
 				ariaLabel: 'Mark as watched',
 				icon: CheckCircle
-			}
-		];
-	}
-
-	// Watched row actions: mark unwatched
-	function getWatchedActions(item: ListEntry): ListItemAction[] {
-		return [
-			{
-				formAction: '?/markUnwatched',
-				method: 'post',
-				hiddenFields: [{ name: 'id', value: item.id }],
-				label: 'Mark as unwatched',
-				ariaLabel: 'Mark as unwatched',
-				icon: RotateCcw
 			}
 		];
 	}
@@ -256,32 +252,15 @@
 		<ItemList
 			title="Your list"
 			titleId="list-heading"
-			items={watchlistWithOptimistic}
+			items={movies}
 			emptyMessage="No movies yet. Add one above."
 			emptyIcon={emptyListIcon}
 		>
 			{#snippet children(item)}
 				<ListItem
 					item={item}
-					actions={getWatchlistActions(item)}
-					mainActionLabel="WATCHED IT!"
-					scrapAction={getScrapAction(item)}
-				/>
-			{/snippet}
-		</ItemList>
-
-		<ItemList
-			title="Watched"
-			titleId="watched-heading"
-			items={watchedWithOptimistic}
-			emptyMessage="No watched movies yet."
-			emptyIcon={emptyListIcon}
-		>
-			{#snippet children(item)}
-				<ListItem
-					item={item}
-					actions={getWatchedActions(item)}
-					mainActionLabel="UNWATCHED"
+					actions={getItemActions(item)}
+					mainActionLabel={item.watched ? 'UNWATCHED' : 'WATCHED IT!'}
 					scrapAction={getScrapAction(item)}
 				/>
 			{/snippet}

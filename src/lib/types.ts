@@ -8,6 +8,7 @@ export interface ListEntry {
 	year?: number | null;
 	favorite?: boolean;
 	poster_path?: string | null;
+	watched?: boolean;
 }
 
 /**
